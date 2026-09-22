@@ -80,14 +80,14 @@ namespace ams::pgl {
         R_RETURN(::pglLaunchProgramFromHost(reinterpret_cast<u64 *>(out), content_path, process_flags));
     }
 
-    Result GetHostProgramLaunchProperty(pgl::ProgramLaunchProperty *out, const char *content_path) {
-        static_assert(sizeof(*out) == sizeof(::PglProgramLaunchProperty));
-        R_RETURN(::pglGetHostProgramLaunchProperty(reinterpret_cast<::PglProgramLaunchProperty *>(out), content_path));
+    Result GetProgramLaunchPropertyFromHost(pgl::ProgramLaunchProperty *out, const char *content_path) {
+        static_assert(sizeof(*out) == sizeof(::PglContentMetaInfo));
+        R_RETURN(::pglGetHostContentMetaInfo(reinterpret_cast<::PglContentMetaInfo *>(out), content_path));
     }
 
     Result GetRunningApplicationProcessId(os::ProcessId *out) {
         static_assert(sizeof(*out) == sizeof(u64));
-        R_RETURN(::pglGetRunningApplicationProcessId(reinterpret_cast<u64 *>(out)));
+        R_RETURN(::pglGetApplicationProcessId(reinterpret_cast<u64 *>(out)));
     }
 
     Result BoostSystemMemoryResourceLimit(u64 size) {
@@ -95,7 +95,7 @@ namespace ams::pgl {
     }
 
     Result IsRunningProcess(bool *out, os::ProcessId process_id) {
-        R_RETURN(::pglIsRunningProcess(out, static_cast<u64>(process_id)));
+        R_RETURN(::pglIsProcessTracked(out, static_cast<u64>(process_id)));
     }
 
     Result EnableApplicationCrashReport(bool enabled) {
@@ -111,12 +111,12 @@ namespace ams::pgl {
     }
 
     Result TriggerSnapShotDumper(const char *arg, SnapShotDumpType dump_type) {
-        R_RETURN(::pglTriggerSnapShotDumper(static_cast<::PglSnapShotDumpType>(dump_type), arg));
+        R_RETURN(::pglTriggerApplicationSnapShotDumper(static_cast<::PglSnapShotDumpType>(dump_type), arg));
     }
 
     Result CreateShellEvent(pgl::EventObserver *out) {
         ::PglEventObserver obs;
-        R_TRY(::pglCreateShellEvent(std::addressof(obs)));
+        R_TRY(::pglGetEventObserver(std::addressof(obs)));
 
         if (hos::GetVersion() >= hos::Version_12_0_0) {
             auto observer_holder = MakeUniqueFromStaticExpHeap<impl::EventObserverByTipc<RemoteEventObserver>>(obs);
@@ -137,7 +137,14 @@ namespace ams::pgl {
     }
     
     Result EnableApplicationCrashReport2(os::ProcessId process_id, bool enabled) {
-        R_RETURN(::pglEnableApplicationCrashReport2(static_cast<u64>(process_id), enabled));
+        /* NOTE: libnx does not implement this command, so we dispatch it manually. */
+        /* The command was added in 23.0.0, so the session is always tipc. */
+        const struct {
+            u64 process_id;
+            u8  enabled;
+        } in = { static_cast<u64>(process_id), static_cast<u8>(enabled) };
+
+        R_RETURN(tipcDispatchIn(::pglGetServiceSessionTipc(), 31, in));
     }
     #else
     Result Initialize() {
@@ -163,7 +170,7 @@ namespace ams::pgl {
         AMS_ABORT("TODO");
     }
 
-    Result GetHostProgramLaunchProperty(pgl::ProgramLaunchProperty *out, const char *content_path) {
+    Result GetProgramLaunchPropertyFromHost(pgl::ProgramLaunchProperty *out, const char *content_path) {
         AMS_UNUSED(out, content_path);
         AMS_ABORT("TODO");
     }

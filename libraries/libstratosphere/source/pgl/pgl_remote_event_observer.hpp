@@ -34,24 +34,24 @@ namespace ams::pgl {
                 ::Event ev;
                 ON_RESULT_SUCCESS { out.SetValue(ev.revent, true); };
 
-                R_RETURN(::pglEventObserverGetShellEvent(std::addressof(m_observer), std::addressof(ev)));
+                R_RETURN(::pglEventObserverGetProcessEvent(std::addressof(m_observer), std::addressof(ev)));
             }
 
             Result GetShellEventInfo(ams::sf::Out<pm::ProcessEventInfo> out) {
                 static_assert(sizeof(*out.GetPointer()) == sizeof(::PmProcessEventInfo));
-                R_RETURN(::pglEventObserverGetShellEventInfo(std::addressof(m_observer), reinterpret_cast<::PmProcessEventInfo *>(out.GetPointer())));
+                R_RETURN(::pglEventObserverGetProcessEventInfo(std::addressof(m_observer), reinterpret_cast<::PmProcessEventInfo *>(out.GetPointer())));
             }
 
             Result GetShellEvent(ams::tipc::OutCopyHandle out) {
                 ::Event ev;
                 ON_RESULT_SUCCESS { out.SetValue(ev.revent); };
 
-                R_RETURN(::pglEventObserverGetShellEvent(std::addressof(m_observer), std::addressof(ev)));
+                R_RETURN(::pglEventObserverGetProcessEvent(std::addressof(m_observer), std::addressof(ev)));
             }
 
             Result GetShellEventInfo(ams::tipc::Out<pm::ProcessEventInfo> out) {
                 static_assert(sizeof(*out.GetPointer()) == sizeof(::PmProcessEventInfo));
-                R_RETURN(::pglEventObserverGetShellEventInfo(std::addressof(m_observer), reinterpret_cast<::PmProcessEventInfo *>(out.GetPointer())));
+                R_RETURN(::pglEventObserverGetProcessEventInfo(std::addressof(m_observer), reinterpret_cast<::PmProcessEventInfo *>(out.GetPointer())));
             }
     };
     static_assert(pgl::sf::IsIEventObserver<RemoteEventObserver>);
